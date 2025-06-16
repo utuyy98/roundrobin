@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Simulasi Round Robin</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+      background-color: #f9f9f9;
+    }
+    label, input {
+      display: block;
+      margin: 8px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #aaa;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background-color: #ddd;
+    }
+    button {
+      margin-top: 12px;
+      padding: 10px 16px;
+      background-color: #2d89ef;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover {
+      background-color: #1b5fcc;
+    }
+  </style>
+</head>
+<body>
+  <h2>Simulasi Penjadwalan CPU - Round Robin</h2>
+
+  <label>Jumlah Proses:
+    <input type="number" id="n" value="3" min="1" onchange="buatInput()">
+  </label>
+
+  <div id="burstInputs"></div>
+
+  <label>Time Quantum:
+    <input type="number" id="quantum" value="3" min="1">
+  </label>
+
+  <button onclick="jalankan()">Jalankan Simulasi</button>
+
+  <div id="output"></div>
+
+  <script>
+    function buatInput() {
+      const burstDiv = document.getElementById('burstInputs');
+      const n = parseInt(document.getElementById('n').value);
+      burstDiv.innerHTML = '';
+      for (let i = 0; i < n; i++) {
+        burstDiv.innerHTML += `
+          <label>Burst Time P${i + 1}:
+            <input type="number" id="b${i}" value="5" min="0">
+          </label>
+        `;
+      }
+    }
+
+    buatInput(); // panggil awal
+
+    function jalankan() {
+      const n = parseInt(document.getElementById('n').value);
+      const quantum = parseInt(document.getElementById('quantum').value);
+      const burst = [];
+      for (let i = 0; i < n; i++) {
+        burst.push(parseInt(document.getElementById(`b${i}`).value));
+      }
+
+      let sisa = [...burst];
+      let wt = Array(n).fill(0);
+      let t = 0;
+      let done;
+
+      do {
+        done = true;
+        for (let i = 0; i < n; i++) {
+          if (sisa[i] > 0) {
+            done = false;
+            if (sisa[i] > quantum) {
+              t += quantum;
+              sisa[i] -= quantum;
+            } else {
+              t += sisa[i];
+              wt[i] = t - burst[i];
+              sisa[i] = 0;
+            }
+          }
+        }
+      } while (!done);
+
+      let tat = burst.map((b, i) => b + wt[i]);
+      let output = `<table><tr><th>Proses</th><th>Burst Time</th><th>Waiting Time</th><th>Turnaround Time</th></tr>`;
+      for (let i = 0; i < n; i++) {
+        output += `<tr><td>P${i + 1}</td><td>${burst[i]}</td><td>${wt[i]}</td><td>${tat[i]}</td></tr>`;
+      }
+      output += `</table>`;
+      output += `<p>Rata-rata Waiting Time: ${(wt.reduce((a, b) => a + b) / n).toFixed(2)}</p>`;
+      output += `<p>Rata-rata Turnaround Time: ${(tat.reduce((a, b) => a + b) / n).toFixed(2)}</p>`;
+
+      document.getElementById('output').innerHTML = output;
+    }
+  </script>
+</body>
+</html>
